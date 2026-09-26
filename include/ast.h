@@ -12,6 +12,7 @@ typedef enum
     AST_SET,
     AST_PRINTC,
     AST_EXIT,
+    AST_ALIAS,
 
     // math shit
 
@@ -24,6 +25,7 @@ typedef enum
     AST_INT,
     AST_STRING,
     AST_IDENT,
+    AST_INDEX,
     AST_DEREF
 
 } ASTType;

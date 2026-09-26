@@ -34,40 +34,6 @@ void sskip(Lexer *lexer)
     }
 }
 
-const char *debug_type(TokenType type)
-{
-    switch (type)
-    {
-    case INT:
-        return "INT";
-        break;
-
-    case IDENTIFIER:
-        return "IDENTIFIER";
-        break;
-
-    case KW_PRINT:
-        return "KW_PRINT";
-        break;
-
-    case KW_ADD:
-        return "KW_ADD";
-        break;
-
-    case NEWLINE:
-        return "NEWLINE";
-        break;
-
-    case END:
-        return "END";
-        break;
-
-    default:
-        return "UNKNOWN";
-        break;
-    }
-}
-
 int isAlpha(char c)
 {
 
@@ -96,6 +62,12 @@ void skip_comment(Lexer *lexer)
         }
     }
 }
+
+char seek(Lexer *lexer) {
+    return lexer->c[lexer->size + 1];
+}
+
+// abacaxi
 
 TokenType KW_find(const char *str)
 {
@@ -162,27 +134,24 @@ Token next_token(Lexer *lexer)
         return n_token;
     }
 
-    // end of file token
-    if (c == '\0')
-    {
-        n_token.type = END;
+    if (c == '-' && seek(lexer) == '>') {
+        n_token.type = ALIAS;
+        lexer->size += 2;
         return n_token;
     }
 
-    // new line token
-    if (c == '\n')
+    switch (c)
     {
-        n_token.type = NEWLINE;
-        lexer->line++;
-        lexer->size++;
-        return n_token;
-    }
-
-    // star tokenization
-    if (c == '*') {
-        n_token.type = STAR;
-        lexer->size++;
-        return n_token;
+        case '\0': n_token.type = END; return n_token;
+        case '\n': n_token.type = NEWLINE; lexer->line++; lexer->size++; return n_token;
+        case '*': n_token.type = STAR; lexer->size++; return n_token;
+        case '[': n_token.type = LBRACKET; lexer->size++; return n_token;
+        case ']': n_token.type = RBRACKET; lexer->size++; return n_token;
+        case '+':   n_token.type = PLUS;      lexer->size++; return n_token;
+        case '-':   n_token.type = MINUS;     lexer->size++; return n_token;
+        case '=':   n_token.type = ASSIGN;    lexer->size++; return n_token;
+        case '>':   n_token.type = GT;   lexer->size++; return n_token;
+        case '<':   n_token.type = LT;      lexer->size++; return n_token;
     }
 
     // int tokenization

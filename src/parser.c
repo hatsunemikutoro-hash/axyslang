@@ -4,20 +4,11 @@
 #include <stdlib.h>
 #include "string.h"
 #include "program.h"
+#include "debug.h"
 
 ASTnode *parse_deref(Parser *parser);
 ASTnode *parse_single_instruction(Parser *parser, ASTType type);
 
-static char *my_strdup(const char *s)
-{
-    size_t len = strlen(s) + 1;
-    char *p = malloc(len);
-    if (p != NULL)
-    {
-        memcpy(p, s, len);
-    }
-    return p;
-}
 
 void free_ast(ASTnode *node)
 {
@@ -36,7 +27,28 @@ void free_ast(ASTnode *node)
 void advance(Parser *parser)
 {
     parser->current = next_token(parser->lexer);
+    if (DEBUG_TOKENS)
+    {
+        debug_token(parser->current);
+    }
 }
+
+ASTnode *create_node_empty(ASTType type)
+{
+    ASTnode *node = malloc(sizeof(ASTnode));
+
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    node->type = type;
+    node->left = NULL;
+    node->right = NULL;
+
+    return node;
+}
+
 
 ASTnode *create_node(ASTType type, Token Tok)
 {
@@ -110,7 +122,8 @@ ASTnode *parse_instruction_without_arg(Parser *parser, ASTType type)
 {
     ASTnode *node = create_node(type, parser->current);
 
-    if (node == NULL) {
+    if (node == NULL)
+    {
         return NULL;
     }
 
@@ -181,14 +194,33 @@ ASTnode *parse_div(Parser *parser)
     return node;
 }
 
-ASTnode *parse_deref(Parser *parser) {
-    ASTnode *node = parse_single_instruction(parser, AST_DEREF);
+ASTnode *parse_alias(Parser *parser, ASTnode *address) {
+    advance(parser);
 
-    if (node == NULL) {
+    if (parser->current.type != IDENTIFIER) {
+        fprintf(stderr, "ALIAS NEED TO BE AN IDENTIFIER: Line %d\n", parser->current.line);
         return NULL;
     }
 
-    if (node->left == NULL) {
+    ASTnode *node = create_node_empty(AST_ALIAS);
+    node->left = address;
+    node->right = create_node(AST_IDENT, parser->current);
+    
+    advance(parser);
+    return node;
+}
+
+ASTnode *parse_deref(Parser *parser)
+{
+    ASTnode *node = parse_single_instruction(parser, AST_DEREF);
+
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    if (node->left == NULL)
+    {
         fprintf(stderr, "CANNOT MAKE A DEREFERENCE WITHOUT A ADDRESS: Line %d\n", parser->current.line);
 
         free_ast(node);
@@ -196,6 +228,65 @@ ASTnode *parse_deref(Parser *parser) {
     }
 
     return node;
+}
+
+ASTnode *parse_address(Parser *parser)
+{
+    int line = parser->current.line;
+    if (parser->current.type == LBRACKET)
+    {
+        advance(parser);
+        // []
+        if (parser->current.type == RBRACKET)
+        {
+            fprintf(stderr, "AXYS ERROR, [] IS EMPTY: LINE %d", line);
+        }
+
+        ASTnode *inner = parse_address(parser); // recursa pra caso tenha [[0]]
+
+        if (inner == NULL)
+        {
+            fprintf(stderr, "AXYS ERROR, EXPECTED ADDRESS INSIDE '[] Line %d", line);
+            return NULL;
+        }
+
+        // [0
+        if (parser->current.type != RBRACKET)
+        {
+            fprintf(stderr, "AXYS ERROR, EXPECTED ']' Line %d", line);
+            free_ast(inner);
+            return NULL;
+        }
+        advance(parser);
+
+        ASTnode *node = malloc(sizeof(ASTnode));
+        node->type = AST_INDEX;
+        node->left = inner;
+        node->right = NULL;
+        return node;
+    }
+
+    if (parser->current.type == STAR)
+    {
+        return parse_deref(parser); // resolve *[]
+    }
+
+    if (parser->current.type == INT)
+    {
+        ASTnode *node = create_node(AST_INT, parser->current);
+        advance(parser);
+        return node;
+    }
+
+    if (parser->current.type == IDENTIFIER)
+    {
+        ASTnode *node = create_node(AST_IDENT, parser->current);
+        advance(parser);
+        return node;
+    }
+
+    fprintf(stderr, "AXYS ERROR EXPECTED AN ADDRESS LINE %d", line);
+    return NULL;
 }
 
 ASTnode *parse_instruction(Parser *parser)
@@ -231,6 +322,18 @@ ASTnode *parse_instruction(Parser *parser)
 
     case KW_DIV:
         return parse_div(parser);
+    
+    case LBRACKET:
+        {
+            ASTnode *addr = parse_address(parser);
+
+            if (parser->current.type == ALIAS){
+                ASTnode *alias = parse_alias(parser, addr);
+                return alias;
+            }
+
+            return addr;    
+        }
 
     default:
         return NULL;
@@ -256,13 +359,20 @@ Program *parse_program(Parser *parser)
 
         ASTnode *node = parse_instruction(parser);
 
+        if (DEBUG_AST && node)
+        {
+            printf("[AST]\n");
+            debug_ast(node, 0);
+        }
+
         if (node == NULL)
         {
             advance(parser);
             continue;
         }
 
-        if (!program_add(program, node)) {
+        if (!program_add(program, node))
+        {
             free_ast(node);
             program_destroy(program);
             return NULL;

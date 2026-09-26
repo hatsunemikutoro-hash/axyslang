@@ -1,6 +1,6 @@
 # Axys Language
 
-![Axys Logo](images/Axys_logo.png)
+![Axys Logo](images/axys_logo.png)
 
  ## What is it?
 

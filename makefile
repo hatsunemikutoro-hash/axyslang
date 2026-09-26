@@ -4,7 +4,7 @@ CPPFLAGS = -Iinclude
 
 TARGET = axys
 
-SRC = src/main.c src/parser.c src/tokenizer.c src/openfile.c src/vm.c src/interpreter.c src/program.c
+SRC = src/main.c src/parser.c src/tokenizer.c src/openfile.c src/vm.c src/interpreter.c src/program.c src/debug.c
 OBJ = $(SRC:src/%.c=build/%.o)
 
 $(TARGET): $(OBJ)

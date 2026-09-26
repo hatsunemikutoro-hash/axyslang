@@ -27,6 +27,20 @@ typedef enum TokenType{
 
     STAR,
 
+    // assign
+    ALIAS, // [0] -> home
+    INDEX, //  [0]
+
+    // expression
+    LBRACKET,
+    RBRACKET,
+    ASSIGN,
+    MINUS,
+    PLUS,
+    GT,
+    LT,
+    
+
     END,
     UNKNOWN
 } TokenType;
@@ -74,5 +88,6 @@ static const Keyword keywords[] = {
 };
 
 Token next_token(Lexer *lexer);
+void debug_token(Token t);
 
 #endif
