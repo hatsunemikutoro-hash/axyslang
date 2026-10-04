@@ -15,6 +15,7 @@ typedef enum TokenType{
     KW_SET,
     KW_PRINTC,
     KW_EXIT,
+    KW_READ,
 
     // math shit
 
@@ -78,6 +79,7 @@ static const Keyword keywords[] = {
     {"set", KW_SET},
     {"printc", KW_PRINTC},
     {"exit", KW_EXIT},
+    {"read", KW_READ},
 
     // math shit
 

@@ -176,7 +176,7 @@ void vm_execute(Machine *machine, ASTnode *node)
 
         if (node->left != NULL && node->left->type == AST_STRING)
         {
-            printf("%s\n", node->left->value.sval);
+            printf("%s", node->left->value.sval);
         }
         break;
 
@@ -269,6 +269,27 @@ void vm_execute(Machine *machine, ASTnode *node)
             add_alias(machine, node->right->value.sval, addr);
             break;
         }
+
+
+    case AST_READ:
+        {
+            char buffer[128];
+            char *endptr;
+            
+            if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+                long valor = strtol(buffer, &endptr, 10);
+
+                if (endptr == buffer || (*endptr != '\n' && *endptr != '\0' && *endptr != ' ')) {
+                    printf("READ ERROR: Expected a NUMBER\n");
+                } else {
+                    machine->memory[machine->cursor] = valor;
+                }
+            } else {
+                printf("READ ERROR: Failed to read STDIN\n");
+            }
+            break;
+        }
+        
 
     default:
         break;

@@ -13,6 +13,7 @@ typedef enum
     AST_PRINTC,
     AST_EXIT,
     AST_ALIAS,
+    AST_READ,
 
     // math shit
 

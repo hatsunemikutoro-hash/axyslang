@@ -65,6 +65,7 @@ const char *token_name(TokenType t) {
     case PLUS:    return "PLUS";
     case GT:        return "GT";
     case LT:    return "LT";
+    case KW_READ: return "READ";
     }
     return "???";
 }
@@ -101,7 +102,8 @@ void debug_ast(ASTnode *node, int depth) {
     case AST_MOVE:     printf("MOVE\n"); break;
     case AST_JUMP:     printf("JUMP\n"); break;
     case AST_EXIT:     printf("EXIT\n"); break;
-    case AST_ALIAS:     printf("ALIAS\n"); break;
+    case AST_ALIAS:    printf("ALIAS\n"); break;
+    case AST_READ:     printf("READ\n"); break;
     default:           printf("?(%d)\n", node->type); break;
     }
 

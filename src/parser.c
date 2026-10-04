@@ -334,6 +334,9 @@ ASTnode *parse_instruction(Parser *parser)
 
             return addr;    
         }
+    
+    case KW_READ:
+        return parse_instruction_without_arg(parser, AST_READ);
 
     default:
         return NULL;
