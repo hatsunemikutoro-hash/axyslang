@@ -36,16 +36,16 @@ git clone https://github.com/hatsunemikutoro-hash/axyslang.git
 cd axyslang
 ```
 
-### 3\. Build the project
-
-```
-make
-```
-
- ### 4\. Clean the project
+### 3\. Clean the project
 
 ```
 make clean
+```
+
+ ### 4\. Build the project
+
+```
+make
 ```
 
  ### 5\. Create an `.axs` file
