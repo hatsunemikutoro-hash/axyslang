@@ -1,5 +1,2 @@
-printc "Escreva um numero: "
-read @ le um numero do stdin
-
+read
 print
-printc 10

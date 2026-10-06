@@ -8,6 +8,7 @@
 
 ASTnode *parse_deref(Parser *parser);
 ASTnode *parse_single_instruction(Parser *parser, ASTType type);
+ASTnode *parse_comparison(Parser *parser);
 
 
 void free_ast(ASTnode *node)
@@ -17,6 +18,7 @@ void free_ast(ASTnode *node)
 
     free_ast(node->left);
     free_ast(node->right);
+    free_ast(node->next);
     if (node->type == AST_STRING || node->type == AST_IDENT)
     {
         free(node->value.sval);
@@ -45,6 +47,8 @@ ASTnode *create_node_empty(ASTType type)
     node->type = type;
     node->left = NULL;
     node->right = NULL;
+    node->next = NULL;
+
 
     return node;
 }
@@ -82,6 +86,7 @@ ASTnode *create_node(ASTType type, Token Tok)
 
     node->left = NULL;
     node->right = NULL;
+    node->next = NULL;
 
     return node;
 }
@@ -102,6 +107,8 @@ ASTnode *parse_arg(Parser *parser)
         break;
     case STAR:
         return parse_deref(parser);
+    case LPARENT:
+        return parse_comparison(parser);
 
     default:
         return NULL;
@@ -137,7 +144,7 @@ ASTnode *parse_single_instruction(Parser *parser, ASTType type)
     ASTnode *node = create_node(type, parser->current);
 
     if (node == NULL)
-    {
+    {   
         return NULL;
     }
     advance(parser);
@@ -263,6 +270,7 @@ ASTnode *parse_address(Parser *parser)
         node->type = AST_INDEX;
         node->left = inner;
         node->right = NULL;
+        node->next = NULL;
         return node;
     }
 
@@ -287,6 +295,130 @@ ASTnode *parse_address(Parser *parser)
 
     fprintf(stderr, "AXYS ERROR EXPECTED AN ADDRESS LINE %d", line);
     return NULL;
+}
+
+ASTnode *parse_comparison(Parser *parser) {
+    int line = parser->current.line;
+    if (parser->current.type != LPARENT) {
+        fprintf(stderr, "AXYS ERROR: EXPECTED ( TO START A CONDITION Line %d\n", line);
+        return NULL;
+    }
+
+    advance(parser);
+
+    if (parser->current.type == RPARENT) {
+            fprintf(stderr, "AXYS ERROR: EXPECTED EXPRESSION INSIDE () Line %d\n", line);
+            return NULL;
+        }
+
+    ASTnode *left = parse_arg(parser);
+
+    if (left == NULL) {
+        return NULL;
+    }
+
+    TokenType op_type = parser->current.type;
+
+    if (op_type != EQ && op_type != NEQ && op_type != LT && op_type != GT) {
+        return left;
+    }
+
+    advance(parser);
+
+    ASTnode *right = parse_arg(parser);
+    if (right == NULL) {
+        free_ast(left);
+        return NULL;
+    }
+
+    if (parser->current.type != RPARENT) {
+        free_ast(left);
+        free_ast(right);
+        fprintf(stderr, "AXYS ERROR: EXPECTED ) TO END A CONDITION Line %d\n", line);
+        return NULL;
+    }
+
+    ASTnode *comp_node = create_node_empty(AST_COMPARISON);
+    comp_node->left = left;
+    comp_node->right = right;
+
+    comp_node->value.ival = op_type;
+
+    return comp_node;
+}
+
+ASTnode *parse_block_end(Parser *parser) {
+    ASTnode *block = create_node_empty(AST_BLOCK);
+    ASTnode *current = NULL;
+
+    while (parser->current.type != KW_ENDIF && parser->current.type != END) 
+    {
+        if (parser->current.type == NEWLINE) {
+            advance(parser);
+            continue;
+        }
+
+         ASTnode *node = parse_instruction(parser);
+
+        if (node == NULL) {
+            advance(parser);
+            continue;
+        }
+
+        if (current == NULL) {
+            block->left = node;
+            current = node;
+        } else {
+            current->next = node;
+            current = node;
+        }
+    }
+
+    return block;
+
+}
+
+
+ASTnode *parse_if(Parser *parser) {
+    int line = parser->current.line;
+    advance(parser);
+
+    ASTnode *comparison = parse_comparison(parser);
+
+    if (comparison == NULL) {
+        return NULL;
+    }
+
+    advance(parser);
+
+    if (parser->current.type != KW_THEN) {
+        fprintf(stderr, "AXYS ERROR: EXPECTED 'then' Line %d\n", line);
+        free_ast(comparison);
+            return NULL;
+    }
+
+    advance(parser);
+
+    // pular denovo é necessario?
+
+    ASTnode *block = parse_block_end(parser);
+    if (block == NULL) {
+        free_ast(comparison);
+        return NULL;
+    }
+    // ta agora é so criar o bloco if
+    ASTnode *node_if = create_node_empty(AST_IF);
+
+    if (node_if == NULL) {
+        free_ast(block);
+        free_ast(comparison);
+        return NULL;
+    }
+
+    node_if->left = comparison;
+    node_if->right = block;
+
+    return node_if;
 }
 
 ASTnode *parse_instruction(Parser *parser)
@@ -337,6 +469,12 @@ ASTnode *parse_instruction(Parser *parser)
     
     case KW_READ:
         return parse_instruction_without_arg(parser, AST_READ);
+    
+    case KW_IF:
+        return parse_if(parser);
+
+    case LPARENT:
+        return parse_comparison(parser);
 
     default:
         return NULL;

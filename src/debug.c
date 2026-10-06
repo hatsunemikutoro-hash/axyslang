@@ -66,6 +66,13 @@ const char *token_name(TokenType t) {
     case GT:        return "GT";
     case LT:    return "LT";
     case KW_READ: return "READ";
+    case KW_IF: return "IF";
+    case KW_THEN: return "THEN";
+    case KW_ENDIF: return "ENDIF";
+    case LPARENT: return "LPARENT";
+    case RPARENT: return "RPARENT";
+    case EQ: return "EQUAL";
+    case NEQ: return "NOT EQUAL";
     }
     return "???";
 }
@@ -104,6 +111,19 @@ void debug_ast(ASTnode *node, int depth) {
     case AST_EXIT:     printf("EXIT\n"); break;
     case AST_ALIAS:    printf("ALIAS\n"); break;
     case AST_READ:     printf("READ\n"); break;
+    case AST_IF:     printf("IF\n"); break;
+    case AST_COMPARISON: {
+    const char *op = "?";
+    switch (node->value.ival) {
+        case EQ:  op = "=="; break;
+        case NEQ: op = "!="; break;
+        case LT:  op = "<";  break;
+        case GT:  op = ">";  break;
+    }
+    printf("COMPARISON(%s)\n", op);
+    break;
+    }
+    case AST_BLOCK: printf("BLOCK\n"); break;
     default:           printf("?(%d)\n", node->type); break;
     }
 

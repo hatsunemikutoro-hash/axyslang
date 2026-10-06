@@ -140,6 +140,18 @@ Token next_token(Lexer *lexer)
         return n_token;
     }
 
+    if (c == '=' && seek(lexer) == '=') {
+        n_token.type = EQ;
+        lexer->size += 2;
+        return n_token;
+    }
+
+    if (c == '!' && seek(lexer) == '=') {
+        n_token.type = NEQ;
+        lexer->size += 2;
+        return n_token;
+    }
+
     switch (c)
     {
         case '\0': n_token.type = END; return n_token;
@@ -152,6 +164,8 @@ Token next_token(Lexer *lexer)
         case '=':   n_token.type = ASSIGN;    lexer->size++; return n_token;
         case '>':   n_token.type = GT;   lexer->size++; return n_token;
         case '<':   n_token.type = LT;      lexer->size++; return n_token;
+        case '(':   n_token.type = LPARENT;      lexer->size++; return n_token;
+        case ')':   n_token.type = RPARENT;      lexer->size++; return n_token;
     }
 
     // int tokenization

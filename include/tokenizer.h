@@ -16,6 +16,9 @@ typedef enum TokenType{
     KW_PRINTC,
     KW_EXIT,
     KW_READ,
+    KW_IF,
+    KW_THEN,
+    KW_ENDIF,
 
     // math shit
 
@@ -35,11 +38,15 @@ typedef enum TokenType{
     // expression
     LBRACKET,
     RBRACKET,
+    LPARENT,
+    RPARENT,
     ASSIGN,
     MINUS,
     PLUS,
     GT,
     LT,
+    EQ,
+    NEQ,
     
 
     END,
@@ -80,6 +87,12 @@ static const Keyword keywords[] = {
     {"printc", KW_PRINTC},
     {"exit", KW_EXIT},
     {"read", KW_READ},
+
+    // CONDICIONAL
+
+    {"if", KW_IF},
+    {"then", KW_THEN},
+    {"end", KW_ENDIF},
 
     // math shit
 

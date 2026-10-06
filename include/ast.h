@@ -14,6 +14,9 @@ typedef enum
     AST_EXIT,
     AST_ALIAS,
     AST_READ,
+    AST_IF,
+    AST_COMPARISON,
+    AST_BLOCK,
 
     // math shit
 
@@ -42,6 +45,7 @@ typedef struct ASTnode
 
     struct ASTnode *left;
     struct ASTnode *right;
+    struct ASTnode *next;
 } ASTnode;
 
 #endif

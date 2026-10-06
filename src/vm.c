@@ -90,35 +90,62 @@ int resolve_operand(Machine *machine, ASTnode *operand, int *result)
         return 0;
     }
 
-    if (operand->type == AST_INT)
+    switch (operand->type)
     {
-        *result = operand->value.ival;
-        return 1;
-    }
+        case AST_INT:
+            *result = operand->value.ival;
+            return 1;
 
-    if (operand->type == AST_IDENT) {
-        return find_aliases(machine, operand->value.sval, result);
-    }
+        case AST_IDENT:
+            return find_aliases(machine, operand->value.sval, result);
 
-    if (operand->type == AST_DEREF && operand->left != NULL)
-    {
+        case AST_DEREF: {
+            if (operand->left == NULL)
+            {
+                return 0;
+            }
 
-        int address;
+            int address;
 
-        if (!resolve_operand(machine, operand->left, &address))
-        {
-            return 0;
+            if (!resolve_operand(machine, operand->left, &address))
+            {
+                return 0;
+            }
+
+            if (address < 0 || address >= MAX_MEM)
+            {
+                return 0;
+            }
+
+            *result = machine->memory[address];
+            return 1;
         }
 
-        if (address < 0 || address >= MAX_MEM)  {
+        case AST_COMPARISON:
+            {
+                int valL;
+                int valR;
+
+                if (resolve_operand(machine, operand->left, &valL)) {
+                    if (resolve_operand(machine, operand->right, &valR)) {
+                        switch (operand->value.ival)
+                        {
+                        case EQ: *result = valL == valR; break;
+                        case NEQ: *result = valL != valR; break;
+                        case GT: *result = valL > valR; break;
+                        case LT: *result = valL < valR; break;
+                        
+                        default:
+                            return 0;
+                        }
+                    }
+                }
+                return 1;
+            }
+
+        default:
             return 0;
-        }
-
-        *result = machine->memory[address];
-        return 1;
     }
-
-    return 0;
 }
 
 int resolve_address(Machine *machine, ASTnode *node, int *address) {
@@ -196,6 +223,29 @@ void vm_execute(Machine *machine, ASTnode *node)
             machine->ip = node->left->value.ival;
         }
         break;
+
+    case AST_IF:
+        {
+                int result = 0;
+                if (!resolve_operand(machine, node->left, &result)) {
+                    break;
+                }
+
+                if (result) {
+                    vm_execute(machine, node->right);
+                }
+                break;
+        }
+
+    case AST_BLOCK:
+        {
+            ASTnode *cur = node->left;
+            while (cur != NULL) {
+                vm_execute(machine, cur);
+                cur = cur->next;
+            }
+            break;
+        }
 
         // MATH UFNCTIONs
 
@@ -288,8 +338,7 @@ void vm_execute(Machine *machine, ASTnode *node)
                 printf("READ ERROR: Failed to read STDIN\n");
             }
             break;
-        }
-        
+        }  
 
     default:
         break;
