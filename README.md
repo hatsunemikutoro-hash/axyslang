@@ -36,13 +36,19 @@ git clone https://github.com/hatsunemikutoro-hash/axyslang.git
 cd axyslang
 ```
 
- ### 3\. Build the project
+### 3\. Build the project
 
 ```
 make
 ```
 
- ### 4\. Create an `.axs` file
+ ### 4\. Clean the project
+
+```
+make clean
+```
+
+ ### 5\. Create an `.axs` file
 
  For example:
 
@@ -58,7 +64,7 @@ print
 printc 10
 ```
 
- ### 5\. Run your program
+ ### 6\. Run your program
 
 ```
 ./axys filename.axs
