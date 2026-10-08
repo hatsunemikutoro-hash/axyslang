@@ -14,6 +14,7 @@ typedef enum
     AST_EXIT,
     AST_ALIAS,
     AST_READ,
+    AST_READC,
     AST_IF,
     AST_COMPARISON,
     AST_BLOCK,

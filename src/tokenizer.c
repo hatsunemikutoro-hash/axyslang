@@ -72,14 +72,15 @@ char seek(Lexer *lexer) {
 TokenType KW_find(const char *str)
 {
 
-    for (size_t i = 0; i < sizeof(keywords) / sizeof(keywords[0]); i++)
-    {
-        if (strcmp(Lower(str), keywords[i].name) == 0)
-        {
-            return keywords[i].type;
+    char *low = Lower(str);
+    for (size_t i = 0; i < sizeof(keywords)/sizeof(keywords[0]); i++) {
+        if (strcmp(low, keywords[i].name) == 0) {
+            TokenType t = keywords[i].type;
+            free(low);
+            return t;
         }
     }
-
+    free(low);
     return IDENTIFIER;
 }
 
@@ -131,6 +132,47 @@ Token next_token(Lexer *lexer)
         n_token.type = STRING;
         n_token.val.sval = str;
 
+        return n_token;
+    }
+
+    if (c == '\'') {
+        lexer->size++;
+        int ch;
+
+        if (lexer->c[lexer->size] == '\\') {
+            lexer->size++;
+            char esc = lexer->c[lexer->size];
+
+            switch (esc)
+            {
+            case 'n': ch = '\n'; break;
+            case 't': ch = '\t'; break;
+            case 'r': ch = '\r'; break;
+            case '0': ch = '\0'; break;
+            case '\\': ch = '\\'; break;
+            case '\'': ch = '\''; break;
+            case '"': ch = '\"'; break;
+            
+            default:
+                 fprintf(stderr, "AXYS ERROR: UNKNOWN ESCAPE '\\%c' Line %d\n", esc, lexer->line);
+                    n_token.type = UNKNOWN;
+                    return n_token;
+            }
+            lexer->size++;
+        } else {
+            ch = (unsigned char)lexer->c[lexer->size];
+            lexer->size++;
+        }
+
+        if (lexer->c[lexer->size] != '\'') {
+            fprintf(stderr, "AXYS ERROR: LITERAL CHAR NOT CLOSED Line %d\n", lexer->line);
+            n_token.type = UNKNOWN;
+            return n_token;
+        }
+        lexer->size++;
+
+        n_token.type = CHAR;
+        n_token.val.ival = ch;
         return n_token;
     }
 

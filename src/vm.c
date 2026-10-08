@@ -340,6 +340,21 @@ void vm_execute(Machine *machine, ASTnode *node)
             break;
         }  
 
+    case AST_READC: {
+        int c = getchar();
+        if (c == EOF) {
+            printf("READC ERROR: Failed to read STDIN\n");
+            break;
+        }
+        machine->memory[machine->cursor] = (unsigned char)c;
+
+        if (c != '\n') {
+            int next;
+            while ((next = getchar()) != '\n' && next != EOF) {}
+        }
+        break;
+    }
+
     default:
         break;
     }

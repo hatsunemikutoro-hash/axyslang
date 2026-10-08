@@ -99,6 +99,9 @@ ASTnode *parse_arg(Parser *parser)
     case INT:
         arg_type = AST_INT;
         break;
+    case CHAR:
+        arg_type = AST_INT;
+        break;
     case STRING:
         arg_type = AST_STRING;
         break;
@@ -469,6 +472,9 @@ ASTnode *parse_instruction(Parser *parser)
     
     case KW_READ:
         return parse_instruction_without_arg(parser, AST_READ);
+    
+    case KW_READC:
+        return parse_instruction_without_arg(parser, AST_READC);
     
     case KW_IF:
         return parse_if(parser);

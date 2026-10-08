@@ -6,16 +6,22 @@ typedef enum TokenType{
     IDENTIFIER,
     STRING,
     NEWLINE,
+    CHAR,
 
     // BuildIn functions
 
-    KW_PRINT,
+    
     KW_MOVE,
     KW_JUMP,
     KW_SET,
-    KW_PRINTC,
+   
     KW_EXIT,
+
+    KW_PRINT,
+    KW_PRINTC,
     KW_READ,
+    KW_READC,
+
     KW_IF,
     KW_THEN,
     KW_ENDIF,
@@ -87,6 +93,7 @@ static const Keyword keywords[] = {
     {"printc", KW_PRINTC},
     {"exit", KW_EXIT},
     {"read", KW_READ},
+    {"readc", KW_READC},
 
     // CONDICIONAL
 

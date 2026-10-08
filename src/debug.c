@@ -73,6 +73,8 @@ const char *token_name(TokenType t) {
     case RPARENT: return "RPARENT";
     case EQ: return "EQUAL";
     case NEQ: return "NOT EQUAL";
+    case CHAR: return "CHAR";
+    case KW_READC: return "READ CHAR";
     }
     return "???";
 }
