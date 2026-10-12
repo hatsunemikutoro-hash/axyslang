@@ -1,17 +1,8 @@
-readc
-print
-printc '\n'
+[0] -> home
+[2] -> destino
 
-@ Bug: só o primeiro if conta, pq?
-if (*0 == 60) then
-    printc "recuar"
-    printc '\0'
-do
+move destino
 
-if (*0 == '>') then
-    printc "avançar"
-    printc '\0'
-do
-
-
-
+if ($ == destino) then
+    printc "O cursor é 2!"
+end

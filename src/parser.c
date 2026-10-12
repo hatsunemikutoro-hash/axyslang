@@ -112,6 +112,9 @@ ASTnode *parse_arg(Parser *parser)
         return parse_deref(parser);
     case LPARENT:
         return parse_comparison(parser);
+    case DOLAR:
+        arg_type = AST_DOLAR;
+        break;
 
     default:
         return NULL;

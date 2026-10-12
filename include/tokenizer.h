@@ -40,6 +40,7 @@ typedef enum TokenType{
     // assign
     ALIAS, // [0] -> home
     INDEX, //  [0]
+    DOLAR,
 
     // expression
     LBRACKET,

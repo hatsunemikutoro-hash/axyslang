@@ -96,6 +96,10 @@ int resolve_operand(Machine *machine, ASTnode *operand, int *result)
             *result = operand->value.ival;
             return 1;
 
+        case AST_DOLAR:
+            *result = machine->cursor;
+            return 1;
+
         case AST_IDENT:
             return find_aliases(machine, operand->value.sval, result);
 
@@ -182,11 +186,13 @@ void vm_execute(Machine *machine, ASTnode *node)
         if (node->left == NULL)
         {
             printf("%d", machine->memory[machine->cursor]);
-        }
-
-        if (node->left != NULL && node->left->type == AST_INT)
-        {
-            printf("%d\n", node->left->value.ival);
+        } else {
+            int operand;
+            if (resolve_operand(machine, node->left, &operand)) {
+                printf("%d", operand);
+            } else {
+                fprintf(stderr, "AXYS ERROR: INVALID OPERAND!\n");
+            }
         }
         break;
 

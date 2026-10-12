@@ -208,6 +208,7 @@ Token next_token(Lexer *lexer)
         case '<':   n_token.type = LT;      lexer->size++; return n_token;
         case '(':   n_token.type = LPARENT;      lexer->size++; return n_token;
         case ')':   n_token.type = RPARENT;      lexer->size++; return n_token;
+        case '$':   n_token.type = DOLAR;   lexer->size++; return n_token;
     }
 
     // int tokenization

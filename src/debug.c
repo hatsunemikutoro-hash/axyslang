@@ -75,6 +75,7 @@ const char *token_name(TokenType t) {
     case NEQ: return "NOT EQUAL";
     case CHAR: return "CHAR";
     case KW_READC: return "READ CHAR";
+    case DOLAR: return "DOLAR";
     }
     return "???";
 }
@@ -126,6 +127,7 @@ void debug_ast(ASTnode *node, int depth) {
     break;
     }
     case AST_BLOCK: printf("BLOCK\n"); break;
+    case AST_DOLAR: printf("DOLAR\n"); break;
     default:           printf("?(%d)\n", node->type); break;
     }
 

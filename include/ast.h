@@ -31,7 +31,8 @@ typedef enum
     AST_STRING,
     AST_IDENT,
     AST_INDEX,
-    AST_DEREF
+    AST_DEREF,
+    AST_DOLAR,
 
 } ASTType;
 
