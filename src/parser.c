@@ -427,6 +427,49 @@ ASTnode *parse_if(Parser *parser) {
     return node_if;
 }
 
+ASTnode *parse_move(Parser *parser) {
+    advance(parser);
+
+    if (parser->current.type == PLUS || parser->current.type == MINUS) {
+        int sign = (parser->current.type == MINUS) ? -1 : 1;
+
+        advance(parser);
+
+        if (parser->current.type != INT) {
+            fprintf(stderr, "MOVE EXPECTS INT AFTER SIGN: Line %d\n", parser->current.line);
+            return NULL;
+        }
+
+        ASTnode *node = create_node(AST_INT, parser->current);
+        if (node == NULL) {
+            return NULL;
+        }
+        node->type = AST_RELATIVE;
+        node->value.ival *= sign;
+        advance(parser);
+
+        ASTnode *move_node = create_node_empty(AST_MOVE);
+        if (!move_node) {
+            free_ast(node);
+            return NULL;
+        }
+        move_node->left = node;
+        return move_node;
+    }
+    ASTnode *move_node = create_node_empty(AST_MOVE);
+    if (move_node == NULL) return NULL;
+
+    ASTnode *arg = parse_arg(parser);
+    if (arg == NULL) {
+        free_ast(move_node);
+        fprintf(stderr, "MOVE EXPECTS AN ARGUMENT: Line %d\n", parser->current.line);
+        return NULL;
+    }
+    move_node->left = arg;
+    return move_node;
+
+}
+
 ASTnode *parse_instruction(Parser *parser)
 {
     switch (parser->current.type)
@@ -444,7 +487,7 @@ ASTnode *parse_instruction(Parser *parser)
         return parse_single_instruction_arg(parser, AST_SUB, "SUB");
 
     case KW_MOVE:
-        return parse_single_instruction_arg(parser, AST_MOVE, "MOVE");
+        return parse_move(parser);
 
     case KW_JUMP:
         return parse_single_instruction_arg(parser, AST_JUMP, "JUMP");

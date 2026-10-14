@@ -18,7 +18,8 @@ Machine *vm_create(void)
 
 void vm_destroy(Machine *machine)
 {
-    if (machine == NULL) {
+    if (machine == NULL)
+    {
         return;
     }
 
@@ -28,7 +29,6 @@ void vm_destroy(Machine *machine)
     }
 
     free(machine);
-    
 }
 
 static int find_aliases(Machine *machine, const char *name, int *address)
@@ -71,7 +71,8 @@ static int add_alias(Machine *machine, const char *name, int address)
 
     int previous_address;
 
-    if (find_aliases(machine, name, &previous_address)) {
+    if (find_aliases(machine, name, &previous_address))
+    {
         fprintf(stderr, "ALIAS %s ALREADY EXISTS\n", name);
         return 0;
     }
@@ -92,78 +93,91 @@ int resolve_operand(Machine *machine, ASTnode *operand, int *result)
 
     switch (operand->type)
     {
-        case AST_INT:
-            *result = operand->value.ival;
-            return 1;
+    case AST_INT:
+        *result = operand->value.ival;
+        return 1;
 
-        case AST_DOLAR:
-            *result = machine->cursor;
-            return 1;
+    case AST_DOLAR:
+        *result = machine->cursor;
+        return 1;
 
-        case AST_IDENT:
-            return find_aliases(machine, operand->value.sval, result);
+    case AST_IDENT:
+        return find_aliases(machine, operand->value.sval, result);
 
-        case AST_DEREF: {
-            if (operand->left == NULL)
-            {
-                return 0;
-            }
-
-            int address;
-
-            if (!resolve_operand(machine, operand->left, &address))
-            {
-                return 0;
-            }
-
-            if (address < 0 || address >= MAX_MEM)
-            {
-                return 0;
-            }
-
-            *result = machine->memory[address];
-            return 1;
+    case AST_DEREF:
+    {
+        if (operand->left == NULL)
+        {
+            return 0;
         }
 
-        case AST_COMPARISON:
-            {
-                int valL;
-                int valR;
+        int address;
 
-                if (resolve_operand(machine, operand->left, &valL)) {
-                    if (resolve_operand(machine, operand->right, &valR)) {
-                        switch (operand->value.ival)
-                        {
-                        case EQ: *result = valL == valR; break;
-                        case NEQ: *result = valL != valR; break;
-                        case GT: *result = valL > valR; break;
-                        case LT: *result = valL < valR; break;
-                        
-                        default:
-                            return 0;
-                        }
-                    }
-                }
-                return 1;
-            }
+        if (!resolve_operand(machine, operand->left, &address))
+        {
+            return 0;
+        }
 
+        if (address < 0 || address >= MAX_MEM)
+        {
+            return 0;
+        }
+
+        *result = machine->memory[address];
+        return 1;
+    }
+
+    case AST_COMPARISON:
+    {
+        int valL;
+        int valR;
+
+        if (!resolve_operand(machine, operand->left, &valL)){
+            return 0;
+        }
+
+        if (!resolve_operand(machine, operand->right, &valR)){
+            return 0;
+        }
+
+        switch (operand->value.ival)
+        {
+        case EQ: *result = (valL == valR); break;
+        case NEQ: *result = (valL != valR); break;
+        case GT: *result = (valL > valR); break;
+        case LT: *result = (valL < valR); break;
+        
         default:
             return 0;
+        }
+        return 1;
+    }
+
+    default:
+        return 0;
     }
 }
 
-int resolve_address(Machine *machine, ASTnode *node, int *address) {
-    if (node == NULL || address == NULL) {return 0;}
+int resolve_address(Machine *machine, ASTnode *node, int *address)
+{
+    if (node == NULL || address == NULL)
+    {
+        return 0;
+    }
 
-    if (node->type == AST_INT) {
+    if (node->type == AST_INT)
+    {
         *address = node->value.ival;
         return 1;
     }
 
-    if (node->type == AST_INDEX) {
+    if (node->type == AST_INDEX)
+    {
         int idx;
-        if (!resolve_operand(machine, node->left, &idx)) return 0;
-        if (idx < 0 || idx >= MAX_MEM) return 0;
+        if (!resolve_operand(machine, node->left, &idx))
+            return 0;
+        if (idx < 0 || idx >= MAX_MEM)
+            return 0;
         *address = idx;
         return 1;
     }
@@ -186,11 +200,16 @@ void vm_execute(Machine *machine, ASTnode *node)
         if (node->left == NULL)
         {
             printf("%d", machine->memory[machine->cursor]);
-        } else {
+        }
+        else
+        {
             int operand;
-            if (resolve_operand(machine, node->left, &operand)) {
+            if (resolve_operand(machine, node->left, &operand))
+            {
                 printf("%d", operand);
-            } else {
+            }
+            else
+            {
                 fprintf(stderr, "AXYS ERROR: INVALID OPERAND!\n");
             }
         }
@@ -215,10 +234,19 @@ void vm_execute(Machine *machine, ASTnode *node)
 
     case AST_MOVE:
     {
-        int operand;
-        if (resolve_operand(machine, node->left, &operand))
+        if (node->left != NULL && node->left->type == AST_RELATIVE)
         {
-            machine->cursor = operand;
+            int offset = node->left->value.ival;
+            int newpos = (machine->cursor + offset) % MAX_MEM;
+            machine->cursor = newpos;
+        }
+        else
+        {
+            int operand;
+            if (resolve_operand(machine, node->left, &operand))
+            {
+                machine->cursor = operand;
+            }
         }
         break;
     }
@@ -231,27 +259,30 @@ void vm_execute(Machine *machine, ASTnode *node)
         break;
 
     case AST_IF:
+    {
+        int result = 0;
+        if (!resolve_operand(machine, node->left, &result))
         {
-                int result = 0;
-                if (!resolve_operand(machine, node->left, &result)) {
-                    break;
-                }
-
-                if (result) {
-                    vm_execute(machine, node->right);
-                }
-                break;
-        }
-
-    case AST_BLOCK:
-        {
-            ASTnode *cur = node->left;
-            while (cur != NULL) {
-                vm_execute(machine, cur);
-                cur = cur->next;
-            }
             break;
         }
+
+        if (result)
+        {
+            vm_execute(machine, node->right);
+        }
+        break;
+    }
+
+    case AST_BLOCK:
+    {
+        ASTnode *cur = node->left;
+        while (cur != NULL)
+        {
+            vm_execute(machine, cur);
+            cur = cur->next;
+        }
+        break;
+    }
 
         // MATH UFNCTIONs
 
@@ -316,47 +347,59 @@ void vm_execute(Machine *machine, ASTnode *node)
         break;
 
     case AST_ALIAS:
-        {
-            if (node->left == NULL || node->right == NULL) break;
-
-            int addr;
-            if (!resolve_address(machine, node->left, &addr))break;
-
-            add_alias(machine, node->right->value.sval, addr);
+    {
+        if (node->left == NULL || node->right == NULL)
             break;
-        }
 
+        int addr;
+        if (!resolve_address(machine, node->left, &addr))
+            break;
+
+        add_alias(machine, node->right->value.sval, addr);
+        break;
+    }
 
     case AST_READ:
+    {
+        char buffer[128];
+        char *endptr;
+
+        if (fgets(buffer, sizeof(buffer), stdin) != NULL)
         {
-            char buffer[128];
-            char *endptr;
-            
-            if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-                long valor = strtol(buffer, &endptr, 10);
+            long valor = strtol(buffer, &endptr, 10);
 
-                if (endptr == buffer || (*endptr != '\n' && *endptr != '\0' && *endptr != ' ')) {
-                    printf("READ ERROR: Expected a NUMBER\n");
-                } else {
-                    machine->memory[machine->cursor] = valor;
-                }
-            } else {
-                printf("READ ERROR: Failed to read STDIN\n");
+            if (endptr == buffer || (*endptr != '\n' && *endptr != '\0' && *endptr != ' '))
+            {
+                printf("READ ERROR: Expected a NUMBER\n");
             }
-            break;
-        }  
+            else
+            {
+                machine->memory[machine->cursor] = valor;
+            }
+        }
+        else
+        {
+            printf("READ ERROR: Failed to read STDIN\n");
+        }
+        break;
+    }
 
-    case AST_READC: {
+    case AST_READC:
+    {
         int c = getchar();
-        if (c == EOF) {
+        if (c == EOF)
+        {
             printf("READC ERROR: Failed to read STDIN\n");
             break;
         }
         machine->memory[machine->cursor] = (unsigned char)c;
 
-        if (c != '\n') {
+        if (c != '\n')
+        {
             int next;
-            while ((next = getchar()) != '\n' && next != EOF) {}
+            while ((next = getchar()) != '\n' && next != EOF)
+            {
+            }
         }
         break;
     }

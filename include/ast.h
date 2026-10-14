@@ -25,6 +25,7 @@ typedef enum
     AST_SUB,
     AST_MULT,
     AST_DIV,
+    AST_RELATIVE,
 
     // TYPES
     AST_INT,

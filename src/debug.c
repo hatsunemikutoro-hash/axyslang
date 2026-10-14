@@ -128,6 +128,7 @@ void debug_ast(ASTnode *node, int depth) {
     }
     case AST_BLOCK: printf("BLOCK\n"); break;
     case AST_DOLAR: printf("DOLAR\n"); break;
+    case AST_RELATIVE: printf("RELATIVE\n"); break;
     default:           printf("?(%d)\n", node->type); break;
     }
 
